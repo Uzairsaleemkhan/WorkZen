@@ -1,0 +1,11 @@
+{
+  "name": "workzen-backend",
+  "version": "1.0.0",
+  "description": "WorkZen is a collaborative task management system where team can collaborate on tasks assigned by project managers.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "uzair",
+  "license": "ISC"
+}
