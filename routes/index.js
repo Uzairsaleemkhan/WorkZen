@@ -8,9 +8,9 @@ router.get('/testing',(req,res)=>{
 
 // authentication routes
 
-router.post('/api/register',authController.register)
-router.post('/api/login',authController.login)
-router.logout('/api/logout',authController.logout)
+router.post('/api/register',authController.register);
+router.post('/api/login',authController.login);
+router.post('/api/logout',authController.logout);
 
 
 module.exports = router;
