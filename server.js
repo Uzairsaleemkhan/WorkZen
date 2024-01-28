@@ -1,10 +1,10 @@
 // Imported external and internal modules
-const route = require('./route/index.js');
+const router = require('./routes/index');
 const express = require("express");
 const cors = require("cors");
 const app= express();
 app.use(cors());
-app.use(route);
+app.use(router);
 app.listen(5000,()=>{
     console.log('app is running')
 });
