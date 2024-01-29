@@ -65,6 +65,7 @@ const authController = {
   },
   register: function (req, res, next) {
     const { username, email, password } = req.body;
+    const response = {};
     // validating user
     const isValid = authController.validateUser(username, email, password);
     if (isValid) {
@@ -75,31 +76,40 @@ const authController = {
         //userrole       ----id-----role-----------email-------
         //login          ----id-----hash-----------email----------
        const hash= bcrypt.hashSync(password,10);
+
        return knex.insert({username,email})
         .into('users')
         .returning('*')
         .transacting(trx)
         .then(userData=>{
-         console.log("USERDATA INSERTED:",userData)
+         console.log("USERDATA INSERTED:",userData);
+         response.username= userData[0].username;
+         response.email = userData[0].email;
          return knex.insert({email})
          .into('userrole')
          .returning('*')
          .transacting(trx)
         })
         .then(userRole=>{
-         console.log("USERROLE INSERTED:", userRole)
+          response.userrole = userRole[0].role;
+         console.log("USERROLE INSERTED:", userRole);
          return  knex.insert({email,hash})
          .into('login')
          .returning('*')
          .transacting(trx)
         })
-        .then(res=>console.log(res,'response from login'))
+        .then(res=>{
+          response.hash= res[0].hash;
+          console.log(res,'response from login')
+        })
         .then( trx.commit)
         .catch(trx.rollback)
       })
-      .then(_=>res.status(201).json("CREATED USER!!"))
+      .then(_=>{
+        return  res.status(201).json(response)
+      })
       .catch(err=>{
-        console.log(err);
+        console.log('error transacting',err);
         return  res.status(400).json("DID NOT CREATED THE USER");
       })
     } else {
