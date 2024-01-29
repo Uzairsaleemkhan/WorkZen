@@ -114,12 +114,11 @@ const authController = {
          return  res.status(201).json(response)
        })
        .catch(err=>{
-         console.log('error transacting',err);
-         return  res.status(400).json("DID NOT CREATED THE USER");
+         return  res.status(400).json({error:'user not created'});
        })
 
     } else {
-      return res.status(400).json(" invalid");
+      return res.status(400).json({error:"invalid"});
     }
   },
 
@@ -183,18 +182,6 @@ const authController = {
 
 
   },
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
