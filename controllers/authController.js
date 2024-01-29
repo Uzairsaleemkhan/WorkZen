@@ -28,56 +28,35 @@ const bcrypt = require("bcrypt");
 
 const authController = {
 
+  // validation function for checking string length
+  isValidStringLength(value,min,max){
+    return typeof value==='string' && value.length>=min && value.length<=max;
 
+  },
 
+  // validation function for checking email 
+  isValidEmail(email){
+    const emailRegex =  /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return typeof email ==='string' && emailRegex.test(email);
 
+  },
 
-
-
-
-
-  validateUser: function (username, email, password) {
+  // validating user data
+  validateUser(username, email, password) {
     //validating username
-    if (
-      typeof username !== "string" ||
-      username.length < 5 ||
-      username.length > 100 ||
-      username
-        .split("")
-        .reduce((acc, char) => (char !== " " ? (acc += char) : acc), "")
-        .length === 0
-    ) {
+    if(!authController.isValidStringLength(username,5,100)){
       return false;
     }
     // validating email
-    else if (
-      typeof email !== "string" ||
-      !email.includes("@") ||
-      email.length < 5 ||
-      email.length > 100 ||
-      email
-        .split("")
-        .reduce((acc, char) => (char !== " " ? (acc += char) : acc), "")
-        .length === 0
-    ) {
+    else if (!authController.isValidStringLength(email,5,100) || !authController.isValidEmail(email)) {
       return false;
     }
     // validating password
-    else if (
-      typeof password !== "string" ||
-      password.length < 5 ||
-      password.length > 100 ||
-      password
-        .split("")
-        .reduce((acc, char) => (char !== " " ? (acc += char) : acc), "")
-        .length === 0
-    ) {
+    else if (!authController.isValidStringLength(password,5,100)) {
       return false;
     }
     // if everything is correct returning true
-    else {
-      return true;
-    }
+    return true;
   },
 
 
@@ -102,7 +81,6 @@ const authController = {
       // if valid sending data to postgres
       knex.transaction((trx) => {
         const hash= bcrypt.hashSync(password,10);
- 
         return knex.insert({username,email})
          .into('users')
          .returning('*')
@@ -111,13 +89,14 @@ const authController = {
           console.log("USERDATA INSERTED:",userData);
           response.username= userData[0].username;
           response.email = userData[0].email;
+          response.id = userData[0].id;
           return knex.insert({email})
           .into('userrole')
           .returning('*')
           .transacting(trx)
          })
          .then(userRole=>{
-           response.userrole = userRole[0].role;
+           response.role = userRole[0].role;
           console.log("USERROLE INSERTED:", userRole);
           return  knex.insert({email,hash})
           .into('login')
@@ -129,7 +108,7 @@ const authController = {
            console.log("USER HASH INSERTED",res);
          })
          .then( trx.commit)
-         .catch(trx.rollback)
+         .catch(trx.rollback);
        })
        .then(_=>{
          return  res.status(201).json(response)
@@ -153,41 +132,54 @@ const authController = {
 
 
 
-
+//  login controller
   login(req, res, next) {
 
     const {email, password } = req.body;
-    const response = {};
+    const response ={};
+
+
     // validating user
     const isValid = authController.validateUser("DEFAULT", email, password);
-    if (isValid) {
-      // if valid sending data to postgres
-      knex.select("*").from("login").where({email})
-      .then(response=>{
-        console.log(response)
-        if(response[0]){
-          bcrypt.compare(password,response[0].hash,(error,result)=>{
-            if(error){
-              return res.status(400).json("error while comapring passwords");
-            }
-            else if(result){
-              return res.status(200).json(response[0]);
-            }
-            else{
-              return res.status(400).json('password incorrect')
-            }
-          });
-        }
-        else{
-          res.status(400).json("user not found");
-        }
-      })
-      .catch(err=>{
-        res.status(400).json("error getting user")
-      })
-    } else {
-      return res.status(400).json(" invalid");
+    if(!isValid){
+      return res.status(400).json("Invalid user credentials");
     }
+
+
+    // Retrieving user data from the database
+      knex.select("*").from("login").where({email}).first()
+      .then(user=>{
+        if(!user){
+          throw new Error("User not found!")
+        }
+        // Comparing passwords  
+        return bcrypt.compare(password,user.hash);
+      })
+
+      //handling the password match
+      .then(passwordMatch=>{
+        if(!passwordMatch){
+         throw new Error('password did not match');
+        }
+        return knex.select('*').from('users').where({email}).first()
+      })
+
+      //handling the user data
+      .then(user=>{
+        response.username= user.username;
+        response.email= user.email;
+        response.id = user.id;
+        return knex.select("*").from('userrole').where({email}).first()
+      })
+
+      //handling the role data
+      .then(userRole=>{
+        response.role= userRole.role;
+        return res.status(200).json(response)
+      })
+      .catch((err)=> {
+        console.log(err)
+        res.status(400).json("error getting user")})
 
 
   },
