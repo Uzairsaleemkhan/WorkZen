@@ -19,11 +19,11 @@ module.exports = router;
 /*
 Authentication Routes:
 
-User Registration:
+User Registration:----------DONE
 POST /api/register
 
 
-User Login:
+User Login:  --------------ONGOING
 POST /api/login
 
 

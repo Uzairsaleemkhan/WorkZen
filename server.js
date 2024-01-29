@@ -7,6 +7,9 @@ const app= express();
 app.use(bodyParser.json())
 app.use(cors());
 app.use(router);
+
+
+
 app.listen(5000,()=>{
     console.log('app is running')
 });
