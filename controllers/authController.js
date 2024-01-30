@@ -16,10 +16,7 @@ const bcrypt = require("bcrypt");
 //users          ----id-----username-------email-------
 //userrole       ----id-----role-----------email-------
 //login          ----id-----hash-----------email----------
-//      ---------------projects schema--------------
-//projects       ----id-----email----------status--------title--------description--------
-//projectmembers ----id-----projectid------email------
-//projectrole    ----id-----role-----------projectid-----email
+
 
 //       --------------tasks schema ---------------
 //tasks          ----id-----email----------status--------title--------description----projectid-----asssigned
@@ -141,7 +138,7 @@ const authController = {
     // validating user
     const isValid = authController.validateUser("DEFAULT", email, password);
     if(!isValid){
-      return res.status(400).json("Invalid user credentials");
+      return res.status(400).json({ error:"invalid"});
     }
 
 
@@ -152,7 +149,7 @@ const authController = {
           throw new Error("User not found!")
         }
         // Comparing passwords  
-        return bcrypt.compare(password,user.hash);
+        return bcrypt.compare(password, user.hash);
       })
 
       //handling the password match
@@ -178,7 +175,7 @@ const authController = {
       })
       .catch((err)=> {
         console.log(err)
-        res.status(400).json("error getting user")})
+        res.status(400).json({error:"invalid credentials"})})
 
 
   },

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const authController = require('../controllers/authController')
+const projectController = require('../controllers/projectController')
 //testing the server so everyting's working
 router.get('/testing',(req,res)=>{
     res.json('Just testing it!');
@@ -12,7 +13,9 @@ router.post('/api/register',authController.register);
 router.post('/api/login',authController.login);
 router.post('/api/logout',authController.logout);
 
+// project routes
 
+router.post('/api/projects',projectController.createProject)
 module.exports = router;
 
 
@@ -23,7 +26,7 @@ User Registration:----------DONE
 POST /api/register
 
 
-User Login:  --------------ONGOING
+User Login:  --------------DONE
 POST /api/login
 
 
@@ -35,7 +38,7 @@ POST /api/logout
 
 Project Routes:
 
-Create Project:
+Create Project:----------ONGOING
 POST /api/projects
 
 

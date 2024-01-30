@@ -26,6 +26,9 @@ const cleanUpDatabase=async(email)=>{
 
 describe('Testing POST on /api/register',()=>{
 
+
+
+  
     // testing data with invalid password
     test('It should respond with 400 Bad Request with invalid email',async()=>{
     
@@ -41,6 +44,10 @@ describe('Testing POST on /api/register',()=>{
             expect(response.body).toMatchObject({error:"invalid"})
         
     })
+
+
+
+
     // testing data with invalid password
     test('It should respond with 400 Bad Request with invalid password',async()=>{
     
@@ -56,6 +63,10 @@ describe('Testing POST on /api/register',()=>{
             expect(response.body).toMatchObject({error:"invalid"})
         
     })
+
+
+
+
     // testing data with invalid username
     test('It should respond with 400 Bad Request with invalid username',async()=>{
     
@@ -71,6 +82,12 @@ describe('Testing POST on /api/register',()=>{
             expect(response.body).toMatchObject({error:"invalid"})
         
     })
+
+
+
+
+
+
     // testing data without password
     test('It should respond with 400 Bad Request without password',async()=>{
     
@@ -85,6 +102,11 @@ describe('Testing POST on /api/register',()=>{
             expect(response.body).toMatchObject({error:"invalid"})
         
     })
+
+
+
+
+
     // testing data without username
     test('It should respond with 400 Bad Request without email',async()=>{
     
@@ -99,6 +121,12 @@ describe('Testing POST on /api/register',()=>{
             expect(response.body).toMatchObject({error:"invalid"})
         
     })
+
+
+
+
+
+
     // testing data without username
     test('It should respond with 400 Bad Request without username',async()=>{
     
@@ -113,6 +141,12 @@ describe('Testing POST on /api/register',()=>{
             expect(response.body).toMatchObject({error:"invalid"})
         
     })
+
+
+
+
+
+
     //testing valid data
     test('It should respond with 201 Created',async()=>{
     
@@ -139,6 +173,11 @@ describe('Testing POST on /api/register',()=>{
       expect(isCorrect).toBe(true);
     
 })
+
+
+
+
+
     //testing if username exist in database
     test('It should respond with 400 Bad Request username already exist',async()=>{
     
@@ -156,6 +195,10 @@ describe('Testing POST on /api/register',()=>{
         })
     
 })
+
+
+
+
     //testing if email exist in database
     test('It should respond with 400 Bad Request email already exist',async()=>{
     
@@ -173,6 +216,9 @@ describe('Testing POST on /api/register',()=>{
         })
     
 })
+
+
+
     //testing if data is stored in the database
     test('It should respond with 400 Bad Request email already exist',async()=>{
     
@@ -192,10 +238,13 @@ describe('Testing POST on /api/register',()=>{
 })
 
 
+
     afterEach(async () => {
         // Cleanup database after each test
         await cleanUpDatabase('usman@gmail.com');
     });
+
+
 
     afterAll(async () => {
       // Cleanup tasks after all tests have run
