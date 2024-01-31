@@ -13,53 +13,55 @@ const projectController={
 
    createProject(req,res,next){
         const{email,title,description,membersArray}= req.body;
+        // starting the transaction for project data submission
         knex.transaction(trx=>{
-
-
-
-            return trx('projects')
-           .insert({email,title,description})
-           .returning('*')
-           .first()
-
-
+            //inserting the actual project into db
+            const projectData ={email,title,description};
+            return trx('projects').insert(projectData).returning('*')
 
            .then(project=>{
-                return trx('projectrole')
-                .insert({role:'project member',projectid:project.id,email})
-                .returning('*')
-                .first()
+                const projectRole = {role:'project manager',projectid:project[0].id,email};
+                return trx('projectrole').insert(projectRole).returning('*')
             })
-
 
 
            .then(projectrole=>{
-               return trx('projectmembers')
-               .insert({projectid:projectrole.projectid,email})
-               .returning('*')
-               .first()            
+                const projectMember = {projectid:projectrole[0].projectid,email}
+               return trx('projectmembers').insert(projectMember).returning('*')
             })
 
 
-            .then(projectmember=>{
-                
-                knex.select('*')
-                .from('users')
-                .whereIn('email',membersArray)
+            .then(projectMember=>{
+                const projectId = projectMember[0].projectid;
+                return  knex.select('*').from('users').whereIn('email',membersArray)
                 .then(users=>{
-                    users.forEach((user)=>{
-                        
+                   const usersPromise = users.map((user)=>{
+                        const teamMember ={projectid:projectId,email:user.email}
+                        return trx('projectmembers').insert(teamMember).returning('*')
+                        .then((member)=>{
+                            const teamRole ={projectid:projectId,email:user.email}
+                            return trx('projectrole').insert(teamRole).returning('*')
+                        })
+                        .catch((err)=>{
+                            throw err;
+                        })
+
                     })
+                   return Promise.all(usersPromise)
+                })
+                .catch(err=>{
+                    throw err
                 })
             })
-
-
            .then(trx.commit)
            .catch(trx.rollback)
         })
        .then(result=>{
-            console.log('result transaction success')
-
+            res.status(200).json('created project')
+        })
+        .catch(err=>{
+            console.log("ERROR :",err)
+            res.status(400).json('transaction error')
         })
        
    }
