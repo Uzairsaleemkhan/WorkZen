@@ -9,63 +9,45 @@ const knex = require('knex')({
     }
   });
 const bcrypt = require("bcrypt");
+
 const projectController={
+ 
+    async createProject(req,res,next){
+        const{email, title, description} = req.body;
+        const response = {};
+        try {
+            await knex.transaction(async (trx)=>{
 
-   createProject(req,res,next){
-        const{email,title,description,membersArray}= req.body;
-        // starting the transaction for project data submission
-        knex.transaction(trx=>{
-            //inserting the actual project into db
-            const projectData ={email,title,description};
-            return trx('projects').insert(projectData).returning('*')
+               // Define and insert the data for 'projects' table in database
+                const projectData = {email,title,description};
+               const[registeredProject] = await trx('projects').insert(projectData).returning('*')
+                const[author] = await trx.select('*').from('users').where({email})
+               response.title =registeredProject.title;
+               response.description= registeredProject.description;
+               response.author =author.username;
+               response.projectId = registeredProject.id;
+               response.status = registeredProject.status;
+               response.authorId = author.id;
 
-           .then(project=>{
-                const projectRole = {role:'project manager',projectid:project[0].id,email};
-                return trx('projectrole').insert(projectRole).returning('*')
-            })
+               // Define and insert the data for 'projectrole' table in database
+               const projectRoleData = {role:'project manager', projectid:registeredProject.id,email};
+               const[registeredProjectRole] = await trx('projectrole').insert(projectRoleData).returning('*')
+               response.authorRole= registeredProject.role;
 
+               // Define and insert the data for 'projectmembers' table in database
+               const projectMemberData = {projectid:registeredProjectRole.projectid,email}
+               await trx('projectmembers').insert(projectMemberData).returning('*')
 
-           .then(projectrole=>{
-                const projectMember = {projectid:projectrole[0].projectid,email}
-               return trx('projectmembers').insert(projectMember).returning('*')
-            })
+            });
 
+            res.status(201).json(response);
 
-            .then(projectMember=>{
-                const projectId = projectMember[0].projectid;
-                return  knex.select('*').from('users').whereIn('email',membersArray)
-                .then(users=>{
-                   const usersPromise = users.map((user)=>{
-                        const teamMember ={projectid:projectId,email:user.email}
-                        return trx('projectmembers').insert(teamMember).returning('*')
-                        .then((member)=>{
-                            const teamRole ={projectid:projectId,email:user.email}
-                            return trx('projectrole').insert(teamRole).returning('*')
-                        })
-                        .catch((err)=>{
-                            throw err;
-                        })
-
-                    })
-                   return Promise.all(usersPromise)
-                })
-                .catch(err=>{
-                    throw err
-                })
-            })
-           .then(trx.commit)
-           .catch(trx.rollback)
-        })
-       .then(result=>{
-            res.status(200).json('created project')
-        })
-        .catch(err=>{
-            console.log("ERROR :",err)
-            res.status(400).json('transaction error')
-        })
-       
-   }
-
+        }
+        catch (error) {
+            console.error(error)
+            res.status(400).json({error:'Error registering project'})
+        }
+    }
 
 }
 //      ---------------projects schema--------------
